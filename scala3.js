@@ -409,6 +409,12 @@ function highlightDotty(hljs) {
     ]
   }
 
+  // inline someVar[andMaybeWithParams] match
+  const INLINE_MATCH = {
+    begin: /inline [^\n:]+ match/,
+    keywords: 'inline match'
+  }
+
   return {
     name: 'Scala3',
     aliases: ['scala', 'dotty'],
@@ -428,6 +434,7 @@ function highlightDotty(hljs) {
       ANNOTATION,
       ENUM_CASE,
       MATCH_CASE,
+      INLINE_MATCH,
       END,
       APPLY,
       PROBABLY_TYPE
