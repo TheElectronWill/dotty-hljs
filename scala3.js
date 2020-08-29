@@ -1,46 +1,43 @@
-// --- Internal constants and utilities ---
-
-// identifiers
-const camelId = /[a-z][$\w]*/
-const pascalId = /\b[A-Z][$\w]*\b/
-const alphaId = /[a-zA-Z$_][$\w]*/
-const op = /[^\s\w\d,"'()[\]{}]+/
-const id = new RegExp(`(${alphaId.source}((?<=_)${op.source})?|${op.source}|\`.*?\`)`)
-
-// numbers
-const hexDigit = '[a-fA-F0-9]'
-const hexNumber = `0[xX]${hexDigit}((${hexDigit}|_)*${hexDigit}+)?`
-const decNumber = `0|([1-9]((\\d|_)*\\d)?)`
-const exponent = `[eE][+-]?\\d((\\d|_)*\\d)?`
-const floatingPointA = `(${decNumber})?\\.\\d((\\d|_)*\\d)?${exponent}[fFdD]?`
-const floatingPointB = `${decNumber}${exponent}[fFdD]?`
-const number = new RegExp(`(${hexNumber}|${floatingPointA}|${floatingPointB}|(${decNumber}[lLfFdD]?))`)
-
-// Regular Keywords
-// The "soft" keywords (e.g. 'using') are added later on a case-by-case basis
-const alwaysKeywords = {
-  $pattern: /(\w+|\?\?\?|=>>|\?=>|=>|<:|>:|_|<-|\.nn)/,
-  keyword:
-    'abstract case catch class def do else enum export extends final finally for given '+
-    'if implicit import lazy match new object package private protected override return '+
-    'sealed then throw trait true try type val var while with yield => =>> ?=> <: >: _ <-',
-  literal: 'true false null this super',
-  built_in: '??? asInstanceOf isInstanceOf assert assertFail implicitly locally valueOf summon .nn'
-}
-
-// End of class, enum, etc. header
-const templateDeclEnd = /({|: *\n|\n(?! *(extends|with|derives)))/
-
-// name <title>
-function titleFor(name) {
-  return {
-    className: 'title',
-    begin: `(?<=${name} )${id.source}`
-  }
-}
-
-// --- Function for highlight.js ---
 function highlightDotty(hljs) {
+
+  // identifiers
+  const camelId = /[a-z][$\w]*/
+  const pascalId = /\b[A-Z][$\w]*\b/
+  const alphaId = /[a-zA-Z$_][$\w]*/
+  const op = /[^\s\w\d,"'()[\]{}]+/
+  const id = new RegExp(`(${alphaId.source}((?<=_)${op.source})?|${op.source}|\`.*?\`)`)
+
+  // numbers
+  const hexDigit = '[a-fA-F0-9]'
+  const hexNumber = `0[xX]${hexDigit}((${hexDigit}|_)*${hexDigit}+)?`
+  const decNumber = `0|([1-9]((\\d|_)*\\d)?)`
+  const exponent = `[eE][+-]?\\d((\\d|_)*\\d)?`
+  const floatingPointA = `(${decNumber})?\\.\\d((\\d|_)*\\d)?${exponent}[fFdD]?`
+  const floatingPointB = `${decNumber}${exponent}[fFdD]?`
+  const number = new RegExp(`(${hexNumber}|${floatingPointA}|${floatingPointB}|(${decNumber}[lLfFdD]?))`)
+
+  // Regular Keywords
+  // The "soft" keywords (e.g. 'using') are added later on a case-by-case basis
+  const alwaysKeywords = {
+    $pattern: /(\w+|\?\?\?|=>>|\?=>|=>|<:|>:|_|<-|\.nn)/,
+    keyword:
+      'abstract case catch class def do else enum export extends final finally for given '+
+      'if implicit import lazy match new object package private protected override return '+
+      'sealed then throw trait true try type val var while with yield => =>> ?=> <: >: _ <-',
+    literal: 'true false null this super',
+    built_in: '??? asInstanceOf isInstanceOf assert assertFail implicitly locally valueOf summon .nn'
+  }
+
+  // End of class, enum, etc. header
+  const templateDeclEnd = /({|: *\n|\n(?! *(extends|with|derives)))/
+
+  // name <title>
+  function titleFor(name) {
+    return {
+      className: 'title',
+      begin: `(?<=${name} )${id.source}`
+    }
+  }
 
   const TYPE_ID = {
     className: 'type',
@@ -83,8 +80,8 @@ function highlightDotty(hljs) {
     excludeBegin: true,
     excludeEnd: true,
     keywords: {
-      keyword: ' var val implicit inline using',
-      literal: 'true false null this super'
+      keyword: 'var val implicit inline using',
+      literal: alwaysKeywords.literal,
     },
     contains: [
       {
