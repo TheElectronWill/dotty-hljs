@@ -9,7 +9,7 @@
   <script src="./scala3.js"></script>
   <style>
     pre code {
-      font-family: Fira Code, monospace;
+      font-family: "Fira Code", monospace;
       font-size: 12px;
       font-weight: 500;
       font-variant-ligatures: none;
@@ -100,6 +100,9 @@
 
     val ord = summon[Ord[Int]]
     using.sort(this)(using ord)// the first 'using' is not a keyword
+
+    trait SemiGroup[T]:
+      extension (x: T) def combine (y: T): T
 
     extension [T: Numeric](x: T)
       @infix def min(y: T): T = ...

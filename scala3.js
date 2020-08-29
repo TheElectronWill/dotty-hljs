@@ -179,7 +179,7 @@ function highlightDotty(hljs) {
   // @annot(...) or @my.package.annot(...)
   const ANNOTATION = {
     className: 'meta',
-    begin: `@${id.source}(\.${id.source})*`,
+    begin: `@${id.source}(\\.${id.source})*`,
     contains: [
       hljs.C_BLOCK_COMMENT_MODE,
       APPLY
@@ -303,7 +303,7 @@ function highlightDotty(hljs) {
   // Extension methods
   const EXTENSION = {
     begin: /extension/, end: /(\n|def)/,
-    excludeEnd: true,
+    returnEnd: true,
     keywords: 'extension implicit using',
     contains: [
       hljs.C_LINE_COMMENT_MODE,
