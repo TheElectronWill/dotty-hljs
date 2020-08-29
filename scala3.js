@@ -19,11 +19,11 @@ function highlightDotty(hljs) {
   // Regular Keywords
   // The "soft" keywords (e.g. 'using') are added later on a case-by-case basis
   const alwaysKeywords = {
-    $pattern: /(\w+|\?\?\?|=>>|\?=>|=>|<:|>:|_|<-|\.nn)/,
+    $pattern: /(\w+|\?=>|\?{1,3}|=>>|=>|<:|>:|_|<-|\.nn)/,
     keyword:
       'abstract case catch class def do else enum export extends final finally for given '+
       'if implicit import lazy match new object package private protected override return '+
-      'sealed then throw trait true try type val var while with yield => =>> ?=> <: >: _ <-',
+      'sealed then throw trait true try type val var while with yield =>> => ?=> <: >: _ ? <-',
     literal: 'true false null this super',
     built_in: '??? asInstanceOf isInstanceOf assert assertFail implicitly locally summon .nn'
   }
@@ -39,7 +39,7 @@ function highlightDotty(hljs) {
     }
   }
 
-  const TYPE_ID = {
+  const PROBABLY_TYPE = {
     className: 'type',
     begin: pascalId,
   }
@@ -53,12 +53,13 @@ function highlightDotty(hljs) {
   const TPARAMS = {
     begin: /\[/, end: /\]/,
     contains: [
+      hljs.C_BLOCK_COMMENT_MODE,
       {
         className: 'type',
         begin: id,
         keywords: {
-          $pattern: /[<>:]{1,2}/,
-          keyword: '<: >: :'
+          $pattern: /[<>:]{1,2}|[+-?_]/,
+          keyword: '<: >: : + - ? _'
         }
       }
     ],
@@ -70,7 +71,7 @@ function highlightDotty(hljs) {
     excludeBegin: true,
     returnEnd: true,
     endsWithParent: true,
-    contains: [TYPE_ID, TPARAMS]
+    contains: [PROBABLY_TYPE, TPARAMS]
   }
 
   // Class or method parameters declaration
@@ -80,20 +81,43 @@ function highlightDotty(hljs) {
     excludeBegin: true,
     excludeEnd: true,
     keywords: {
-      $pattern: alwaysKeywords.$pattern,
-      keyword: 'var val implicit inline using ?=> => =>>',
+      $pattern: /\w+|\?=>|\?{1,3}|=>>|=>/,
+      keyword: 'var val implicit inline using ?=> =>> => _ ?',
+      literal: alwaysKeywords.literal,
+      built_in: alwaysKeywords.built_in
+    },
+    contains: [
+      hljs.C_BLOCK_COMMENT_MODE,
+      {
+        className: 'type',
+        begin: /(: *|=>> *|=> *)/, end: /[,=\s]/,
+        excludeBegin: true, excludeEnd: true,
+        endsWithParent: true,
+        contains: [hljs.C_BLOCK_COMMENT_MODE]
+      },
+      hljs.QUOTE_STRING_MODE,
+      NUMBER
+    ]
+  }
+
+  // (using T1, T2, T3)
+  const CTX_PARAMS = {
+    className: 'cparams',
+    begin: /\(using (?!\w+:)/, end: /\)/,
+    excludeBegin: false,
+    excludeEnd: true,
+    relevance: 5,
+    keywords: {
+      $pattern: /\w+|\?=>|\?{1,3}|=>>|=>/,
+      keyword: 'using ?=> =>> => _ ?',
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
     contains: [
       {
         className: 'type',
-        begin: /(: *|using|=>> *|=> *)/, end: /[,=\s]/,
-        excludeBegin: true, excludeEnd: true,
-        endsWithParent: true
+        begin: /[\w[\]]+/
       },
-      hljs.QUOTE_STRING_MODE,
-      NUMBER
     ]
   }
 
@@ -140,22 +164,24 @@ function highlightDotty(hljs) {
     excludeBegin: true, excludeEnd: true,
     keywords: {
       $pattern: alwaysKeywords.$pattern,
-      keyword: 'using => ?=> =>>',
+      keyword: 'using => ?=> =>> _',
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
     contains: [
       STRING,
       NUMBER,
-      TYPE_ID
+      hljs.C_BLOCK_COMMENT_MODE,
+      PROBABLY_TYPE,
     ]
   }
 
-  // @annot(...)
+  // @annot(...) or @my.package.annot(...)
   const ANNOTATION = {
     className: 'meta',
     begin: `@${id.source}(\.${id.source})*`,
     contains: [
+      hljs.C_BLOCK_COMMENT_MODE,
       APPLY
     ]
   }
@@ -203,7 +229,7 @@ function highlightDotty(hljs) {
   // Methods
   const METHOD = {
     className: 'function',
-    begin: /(transparent\s+)?(inline\s+)?def/, end: / =|\n/,
+    begin: /(transparent +)?(inline +)?def/, end: / =|\n/,
     excludeEnd: true,
     relevance: 5,
     keywords: {
@@ -216,9 +242,10 @@ function highlightDotty(hljs) {
       hljs.C_BLOCK_COMMENT_MODE,
       titleFor('def'),
       TPARAMS,
+      CTX_PARAMS,
       PARAMS,
       COLON_TYPE,
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 
@@ -237,14 +264,19 @@ function highlightDotty(hljs) {
 
   // Type declarations
   const TYPEDEF = {
-    begin: /(opaque\s+)?type/, end: /[=;\n]/,
+    className: 'typedef',
+    begin: /(opaque +)?type/, end: /[=;\n]/,
     excludeEnd: true,
-    keywords: 'opaque type this',
+    keywords: {
+      $pattern: /\w+|\?=>|=>>|=>|<:|>:|[+-_?]/,
+      keyword: 'opaque type this ?=> =>> => ? <: >: + - _'
+    },
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
       titleFor('type'),
-      TYPE_ID
+      TPARAMS,
+      PROBABLY_TYPE
     ]
   }
 
@@ -264,7 +296,7 @@ function highlightDotty(hljs) {
         excludeBegin: true, excludeEnd: true,
         endsWithParent: true
       },
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 
@@ -276,8 +308,9 @@ function highlightDotty(hljs) {
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
+      CTX_PARAMS,
       PARAMS,
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 
@@ -293,14 +326,14 @@ function highlightDotty(hljs) {
     endsWithParent: true,
     returnEnd: true,
     keywords: 'extends',
-    contains: [APPLY, TYPE_ID]
+    contains: [APPLY, PROBABLY_TYPE]
   }
   const WITH_MIXIN = {
     begin: ' with ', end: / derives /,
     endsWithParent: true,
     returnEnd: true,
     keywords: 'with',
-    contains: [APPLY, TYPE_ID],
+    contains: [APPLY, PROBABLY_TYPE],
     relevance: 10
   }
   const DERIVES_TYPECLASS = {
@@ -308,7 +341,7 @@ function highlightDotty(hljs) {
     endsWithParent: true,
     returnEnd: true,
     keywords: 'derives',
-    contains: [TYPE_ID],
+    contains: [PROBABLY_TYPE],
     relevance: 10
   }
 
@@ -321,11 +354,12 @@ function highlightDotty(hljs) {
       hljs.C_BLOCK_COMMENT_MODE,
       titleFor('(class|trait|object|enum)'),
       TPARAMS,
+      CTX_PARAMS,
       PARAMS,
       EXTENDS_PARENT,
       WITH_MIXIN,
       DERIVES_TYPECLASS,
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 
@@ -346,7 +380,7 @@ function highlightDotty(hljs) {
       EXTENDS_PARENT,
       WITH_MIXIN,
       DERIVES_TYPECLASS,
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 
@@ -371,7 +405,7 @@ function highlightDotty(hljs) {
       },
       NUMBER,
       STRING,
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 
@@ -396,7 +430,7 @@ function highlightDotty(hljs) {
       MATCH_CASE,
       END,
       APPLY,
-      TYPE_ID
+      PROBABLY_TYPE
     ]
   }
 }

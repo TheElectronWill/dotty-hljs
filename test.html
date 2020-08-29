@@ -31,13 +31,15 @@
      * @param x some parameter x
      * @param y some parameter y
      */
-    open class Test[X, X <: Self[XX, YY]] private(x: Int, y: Int)(z: 0, l: "a" = "a") extends Coords(x,y) with T[X:::Y](z) derives Eql {
-      inline def toto[T](xs: List[Seq[T]] = null)(using Context): R =
+    open class Test[+X, -Y <: Self[XX, YY, ?]] private(x: Int, y: Int)(z: 0, l: "a" = "a") extends Coords(x,y) with T[X:::Y](z) derives Eql {
+      inline def toto[T](xs: Buffer[Seq[T]] = null)(using Context[?]): R[?] =
         var as = 123_456L
         val end = s"interpolation of some $things: ${toto(0)}"
         val float = .56e-17d
         val open = true
         val f = (A, B) => Unit
+        xs += Nil
+        xs ++= Nil
         assert((open+1).isInstanceOf[Boolean])
         assertFail(open.asInstanceOf[java.lang.Boolean].nn.toString)
         ???
@@ -118,6 +120,9 @@
     open class A
     final class B
     package object library
+    def multipleParamLists[T, U >: T, V <: T](x: T)
+                                             (y: U, z: V)
+                                             (using x: String): ReturnType[Int => ?]
     object PO:
       def apply() = "PO"
 
@@ -163,10 +168,14 @@
 
     /* Testing comments now */
     // This is a one-line comment
-    val x: String // Comment
-    val x: String /* Comment */
-    def x(y: Int): A // Comment
-    def x(y: Int): A /* Comment */
+    val x: String// Comment
+    val x: String/* Comment */
+    val x //: String
+    def f(y: Int): A // Comment
+    def f(y: Int): A /* Comment */
+    def f // comment
+    def f[/* comment */]
+    def f(y: /* comment */)
 
     class A  // Comment
     {}
@@ -181,6 +190,8 @@
     enum // Z extends T with U derives V
     given x // as T
 
+    def f[T, U](x: T)(using y: U, z: V)(using C1[T], C2[T], C3[U]): R[T] => Z[U]
+
     def f(x: Int): ExecutionContext ?=> Int = ???
     def f(using x: Int): ExecutionContext =>> Int = ???
     def f(inline x: Int): ExecutionContext => Int = ???
@@ -189,6 +200,7 @@
     def table(init: Table =>> Unit) = ???
     def table(init: Table => Unit) = ???
 
+    g(A => f(3))
     g(ExecutionContext ?=> f(3))  // is expanded to g((using ev: ExecutionContext) => f(3)(using ev))
     g((using ctx: ExecutionContext) => f(22)(using ctx)) // is left as it is
 
