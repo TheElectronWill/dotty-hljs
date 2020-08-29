@@ -53,16 +53,16 @@ function highlightDotty(hljs) {
 
   const TPARAMS = {
     begin: /\[/, end: /\]/,
+    keywords: {
+      $pattern: /<:|>:|[+-?_:]/,
+      keyword: '<: >: : + - ? _'
+    },
     contains: [
       hljs.C_BLOCK_COMMENT_MODE,
       {
         className: 'type',
-        begin: id,
-        keywords: {
-          $pattern: /<:|>:|[+-?_:]/,
-          keyword: '<: >: : + - ? _'
-        }
-      }
+        begin: alphaId
+      },
     ],
     relevance: 3
   }
@@ -298,14 +298,14 @@ function highlightDotty(hljs) {
 
   // Classes, traits, enums, etc.
   const EXTENDS_PARENT = {
-    begin: ' extends ', end: /( with | derives )/,
+    begin: ' extends ', end: /( with | derives |\/[/*])/,
     endsWithParent: true,
     returnEnd: true,
     keywords: 'extends',
     contains: [APPLY, PROBABLY_TYPE]
   }
   const WITH_MIXIN = {
-    begin: ' with ', end: / derives /,
+    begin: ' with ', end: / derives |\/[/*]/,
     endsWithParent: true,
     returnEnd: true,
     keywords: 'with',
@@ -313,7 +313,7 @@ function highlightDotty(hljs) {
     relevance: 10
   }
   const DERIVES_TYPECLASS = {
-    begin: ' derives ', end: /\n/,
+    begin: ' derives ', end: /\n|\/[/*]/,
     endsWithParent: true,
     returnEnd: true,
     keywords: 'derives',

@@ -192,18 +192,32 @@
     class C extends Parent /* ok */
     class C extends Parent with Trait // ok
     class C extends Parent with Trait /* ok */
+    class C extends Parent with // Trait
+    class C extends Parent with /* Trait */
     class C derives Typeclass // ok
     class C derives Typeclass /* ok */
+    class C derives // Typeclass
+    class C derives /* Typeclass */
     class C[s <: String] // ok
     class C[s <: String] /* ok */
     class C(s: String) // ok
     class C(s: String) /* ok */
+
+    enum X/*_*/[+T/*a*/<:/*b*/U]/*hello*/(/*hi*/s:/*hey*/String/*there*/)://test
+      case Red extends Color(/*0xFF0000*/)
+      case Red extends // Color(0xFF0000)
+      case Red extends /* Color(0xFF0000) */
+      case Red extends Color(0xFF0000) // comment
+      case Red extends Color(0xFF0000) /* comment */
+      case // Red extends Color(0xFF0000) // comment
+      case /* Red extends Color(0xFF0000) /* comment*/
 
     type // X = Z
     case // x: String
     case // A,B,C
     enum // Z extends T with U derives V
     given x // as T
+    def /= //(v: Int): Int
 
     def f[T, U](x: T)(using y: U, z: V)(using C1[T], C2[T], C3[U]): R[T] => Z[U]
 
@@ -260,10 +274,17 @@
     // This is Java, for comparison
     package a.b.c.ddd;
 
+    @annot("x", null)
     public class Test&lt;X&lt;Y&gt;&gt; extends A implements B, C, D {
       static final int x = 0;
-      public void x() {
-        return x == y && a > 0 || b != null;
+
+      /**
+       * Some function.
+       * @param a parameter
+       * @return nothing
+       */
+      public void x(int a) {
+        return x == y && a > 0 || b != this;
         throw new AbcdError(0, false);
       }
     }
