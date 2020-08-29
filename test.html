@@ -1,0 +1,199 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test HLJS</title>
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/lightfair.min.css"> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/atom-one-light.min.css">
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/highlight.min.js"></script>
+  <script src="./scala3.js"></script>
+  <style>
+    pre code {
+      font-family: Fira Code, monospace;
+      font-size: 12px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <pre><code class="language-dotty">
+    /** Testing hljs.
+     * Here is some java (ok if not highlighted):
+     * ```java
+     * interface X extends Y
+     * ```
+     * test *italic* and **bold**, _italic_ and __bold__
+     * list test:
+     * - 1
+     * - 2
+     * - 3
+     * @param x some parameter x
+     * @param y some parameter y
+     */
+    open class Test[X, X <: Self[XX, YY]] private(x: Int, y: Int)(z: 0, l: "a" = "a") extends Coords(x,y) with T[X:::Y](z) derives Eql {
+      inline def toto[T](xs: List[Seq[T]] = null)(using Context): R =
+        var as = 123_456L
+        val end = s"interpolation of some $things: ${toto(0)}"
+        val float = .56e-17d
+        val open = true
+        val f = (A, B) => Unit
+        assert((open+1).isInstanceOf[Boolean])
+        assertFail(open.asInstanceOf[java.lang.Boolean].nn.toString)
+        ???
+
+      transparent inline def x() = ???
+      protected type Z <: String >: String
+    }
+    enum Letter {
+      case A, B, C
+      case D(param: Int)
+    }
+    enum Color(val rgb: Int):
+      case Red   extends Color(0xFF0000)
+      case Green extends Color(0x00FF00)
+      case Blue  extends Color(0x0000FF)
+
+    @volatile final val zero = 0
+    lazy val x: Option[AnyRef] = Some("test")
+
+    x match
+      case None => throw new Exception("!")
+      case List(Some("test")) => ...
+      case Some(s: String) => println(s)
+      case l: Letter => return
+      case black @ Color(0) => ...
+      case (a :+ b) :: c :: Some(z) => _
+      case _ =>
+        if 1 > 2 then
+          while false do
+            for x <- xs
+                y <- ys
+            yield (x,y)
+          end while
+        else if 1 < 2 ()
+        else "yay!"
+
+    trait Seq[A] extends Iterable[A] with T1 with T2[T1,A]:
+      @infix @alpha("prepended")
+      def ::(x: A) = ???
+
+      @alpha("append")
+      def +=(x: A) =
+        ???
+      end `+=`
+
+      private var _f: A => Boolean = ()=>false
+      override def func_=(f: A=>Boolean) = _f = f
+
+    type Concat[Xs <: Tuple, +Ys <: Tuple] <: Tuple = Xs match {
+      case Unit => Ys
+      case x *: xs => x *: Concat[xs, Ys]
+    }
+    opaque type TL1 = [T] =>> R1
+
+    given intOrd = ...
+    given intOrd as Ord[Int] = ...
+    given listOrd[T](using ord: Ord[T]) as Ord[List[T]] {...}
+
+    val ord = summon[Ord[Int]]
+    using.sort(this)(using ord)// the first 'using' is not a keyword
+
+    extension [T: Numeric](x: T)
+      @infix def min(y: T): T = ...
+  </code></pre>
+  <br>
+  <pre><code class="language-dotty">
+    package a.b.c.ddd
+
+    /**
+     * A person has a name and an age.
+     */
+    case class Person(name: String, age: Int)
+
+    trait Long[Aaaa,Bbbb,Cccc] extends SomeParentType
+      with Abcdefg with ThisNameIsWayTooLongToBeAllowedInRealSourceCode
+      derives AwesomeTypeclass
+    trait Other
+    open class A
+    final class B
+    package object library
+    object PO:
+      def apply() = "PO"
+
+    def absoluteValue(n: Int): Int =
+      if (n < 0) -n else n
+
+    def interp(n: Int): String =
+      s"there are $n ${color} balloons.\n"
+      f(0, s"interp $var ${f(0, "x")}.")
+
+    type ξ[A] = (A, A)
+
+    trait Hist { lhs =>
+      def ⊕(rhs: Hist): Hist
+      def €(amount: Int): Int
+    }
+
+    def gsum[A: Ring](as: Seq[A]): A =
+      as.foldLeft(Ring[A].zero)(_ + _)
+
+    trait Cake {
+      type T;
+      type Q
+      val things: Seq[T]
+      val nested: (a: A, b: (C,D) => E) => A[B[A[B[C[D],E]]]]
+
+      abstract class Spindler
+
+      def spindle(s: Spindler, ts: Seq[T], reversed: Boolean = false): Seq[Q]
+    }
+
+    val colors = Map(
+      "red"       -> 0xFF0000,
+      "turquoise" -> 0x00FFFF,
+      "black"     -> 0x000000,
+      "orange"    -> 0xFF8040,
+      "brown"     -> 0x804000)
+
+    lazy val ns = for {
+      x <- 0 until 100
+      y <- 0 until 100
+    } yield (x + y) * 33.33
+
+    /* Testing comments now */
+    // This is a one-line comment
+    val x: String // Comment
+    val x: String /* Comment */
+    def x(y: Int): A // Comment
+    def x(y: Int): A /* Comment */
+
+    class A  // Comment
+    {}
+    class A /* Comment */
+    {}
+    class A: // Comment
+    class A /* Comment */
+
+    type // X = Z
+    case // x: String
+    case // A,B,C
+    enum // Z extends T with U derives V
+    given x // as T
+  </code></pre>
+  <pre><code class="language-java">
+    // This is Java, for comparison
+    package a.b.c.ddd;
+
+    public class Test&lt;X&lt;Y&gt;&gt; extends A implements B, C, D {
+      static final int x = 0;
+      public void x() {
+        throw new AbcdError(0, false);
+      }
+    }
+  </code></pre>
+  <script>
+    hljs.registerLanguage('dotty', highlightDotty);
+    hljs.initHighlightingOnLoad();
+  </script>
+</body>
+</html>
