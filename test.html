@@ -97,6 +97,7 @@
     given intOrd = ...
     given intOrd as Ord[Int] = ...
     given listOrd[T](using ord: Ord[T]) as Ord[List[T]] {...}
+    given stringToToken as Conversion[String, Token] = KeyWord(_)
 
     val ord = summon[Ord[Int]]
     using.sort(this)(using ord)// the first 'using' is not a keyword
@@ -187,6 +188,17 @@
     class A: // Comment
     class A /* Comment */
 
+    class C extends Parent // ok
+    class C extends Parent /* ok */
+    class C extends Parent with Trait // ok
+    class C extends Parent with Trait /* ok */
+    class C derives Typeclass // ok
+    class C derives Typeclass /* ok */
+    class C[s <: String] // ok
+    class C[s <: String] /* ok */
+    class C(s: String) // ok
+    class C(s: String) /* ok */
+
     type // X = Z
     case // x: String
     case // A,B,C
@@ -227,6 +239,22 @@
 
     f(2)(using ec)   // explicit argument
     f(2)             // argument is inferred
+
+    inline def summonAll[T <: Tuple]: List[Eq[_]] = inline erasedValue[T] match {
+      case _: EmptyTuple => Nil
+      case _: (t *: ts) => summonInline[Eq[t]] :: summonAll[ts]
+    }
+
+    val both: Object & Product
+    val both: a & b & c
+
+    val either: Password | UserName
+    val either: a | b | c
+
+    def f(union: AAA | BBB | CC, intersection: AAA & BBB & CC)
+    def f(union: a | b | c, intersection: a & b & c)
+
+    type function = x => (B | C <: D)
   </code></pre>
   <pre><code class="language-java">
     // This is Java, for comparison
@@ -235,6 +263,7 @@
     public class Test&lt;X&lt;Y&gt;&gt; extends A implements B, C, D {
       static final int x = 0;
       public void x() {
+        return x == y && a > 0 || b != null;
         throw new AbcdError(0, false);
       }
     }

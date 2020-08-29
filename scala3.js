@@ -1,8 +1,8 @@
 function highlightDotty(hljs) {
 
   // identifiers
-  const camelId = /[a-z][$\w]*/
-  const pascalId = /\b[A-Z][$\w]*\b/
+  const camelCaseId = /[a-z][$\w]*/
+  const capitalizedId = /\b[A-Z][$\w]*\b/
   const alphaId = /[a-zA-Z$_][$\w]*/
   const op = /[^\s\w\d,"'()[\]{}]+/
   const id = new RegExp(`(${alphaId.source}((?<=_)${op.source})?|${op.source}|\`.*?\`)`)
@@ -17,7 +17,7 @@ function highlightDotty(hljs) {
   const number = new RegExp(`(${hexNumber}|${floatingPointA}|${floatingPointB}|(${decNumber}[lLfFdD]?))`)
 
   // Regular Keywords
-  // The "soft" keywords (e.g. 'using') are added later on a case-by-case basis
+  // The "soft" keywords (e.g. 'using') are added later where necessary
   const alwaysKeywords = {
     $pattern: /(\w+|\?=>|\?{1,3}|=>>|=>|<:|>:|_|<-|\.nn)/,
     keyword:
@@ -29,7 +29,7 @@ function highlightDotty(hljs) {
   }
 
   // End of class, enum, etc. header
-  const templateDeclEnd = /({|: *\n|\n(?! *(extends|with|derives)))/
+  const templateDeclEnd = /(\/[/*]|{|: *\n|\n(?! *(extends|with|derives)))/
 
   // name <title>
   function titleFor(name) {
@@ -41,7 +41,8 @@ function highlightDotty(hljs) {
 
   const PROBABLY_TYPE = {
     className: 'type',
-    begin: pascalId,
+    begin: capitalizedId,
+    relevance: 0
   }
 
   const NUMBER = {
@@ -58,20 +59,12 @@ function highlightDotty(hljs) {
         className: 'type',
         begin: id,
         keywords: {
-          $pattern: /[<>:]{1,2}|[+-?_]/,
+          $pattern: /<:|>:|[+-?_:]/,
           keyword: '<: >: : + - ? _'
         }
       }
     ],
     relevance: 3
-  }
-
-  const COLON_TYPE = {
-    begin: /: */, end: /( = |[\s(),/])/,
-    excludeBegin: true,
-    returnEnd: true,
-    endsWithParent: true,
-    contains: [PROBABLY_TYPE, TPARAMS]
   }
 
   // Class or method parameters declaration
@@ -81,22 +74,16 @@ function highlightDotty(hljs) {
     excludeBegin: true,
     excludeEnd: true,
     keywords: {
-      $pattern: /\w+|\?=>|\?{1,3}|=>>|=>/,
-      keyword: 'var val implicit inline using ?=> =>> => _ ?',
+      $pattern: alwaysKeywords.$pattern,
+      keyword: 'inline using ?=> =>> => _ ? <: >:',
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
     contains: [
       hljs.C_BLOCK_COMMENT_MODE,
-      {
-        className: 'type',
-        begin: /(: *|=>> *|=> *)/, end: /[,=\s]/,
-        excludeBegin: true, excludeEnd: true,
-        endsWithParent: true,
-        contains: [hljs.C_BLOCK_COMMENT_MODE]
-      },
       hljs.QUOTE_STRING_MODE,
-      NUMBER
+      NUMBER,
+      PROBABLY_TYPE
     ]
   }
 
@@ -108,16 +95,13 @@ function highlightDotty(hljs) {
     excludeEnd: true,
     relevance: 5,
     keywords: {
-      $pattern: /\w+|\?=>|\?{1,3}|=>>|=>/,
-      keyword: 'using ?=> =>> => _ ?',
+      $pattern: alwaysKeywords.$pattern,
+      keyword: 'using ?=> =>> => _ ? <: >:',
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
     contains: [
-      {
-        className: 'type',
-        begin: /[\w[\]]+/
-      },
+      PROBABLY_TYPE
     ]
   }
 
@@ -134,7 +118,8 @@ function highlightDotty(hljs) {
         ]
       }
     ]
-  };
+  }
+
   const STRING = {
     className: 'string',
     variants: [
@@ -164,7 +149,7 @@ function highlightDotty(hljs) {
     excludeBegin: true, excludeEnd: true,
     keywords: {
       $pattern: alwaysKeywords.$pattern,
-      keyword: 'using => ?=> =>> _',
+      keyword: 'using ' + alwaysKeywords.keyword,
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
@@ -181,8 +166,8 @@ function highlightDotty(hljs) {
     className: 'meta',
     begin: `@${id.source}(\\.${id.source})*`,
     contains: [
-      hljs.C_BLOCK_COMMENT_MODE,
-      APPLY
+      APPLY,
+      hljs.C_BLOCK_COMMENT_MODE
     ]
   }
 
@@ -233,8 +218,8 @@ function highlightDotty(hljs) {
     excludeEnd: true,
     relevance: 5,
     keywords: {
-      $pattern: alwaysKeywords.$pattern,
-      keyword: 'def inline transparent ?=> => =>>',
+      $pattern: /\w+|\?=>|=>>|=>|[?_]/,
+      keyword: 'def inline transparent ?=> => =>> ? _',
       built_in: alwaysKeywords.built_in
     },
     contains: [
@@ -244,21 +229,18 @@ function highlightDotty(hljs) {
       TPARAMS,
       CTX_PARAMS,
       PARAMS,
-      COLON_TYPE,
       PROBABLY_TYPE
     ]
   }
 
   // Variables & Constants
   const VAL = {
-    beginKeywords: 'val var', end: /[=;\n]/,
+    beginKeywords: 'val var', end: /[=:;\n]/,
     excludeEnd: true,
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      titleFor('(val|var)'),
-      APPLY, // for function types
-      COLON_TYPE
+      titleFor('(val|var)')
     ]
   }
 
@@ -269,13 +251,13 @@ function highlightDotty(hljs) {
     excludeEnd: true,
     keywords: {
       $pattern: /\w+|\?=>|=>>|=>|<:|>:|[+-_?]/,
-      keyword: 'opaque type this ?=> =>> => ? <: >: + - _'
+      keyword: 'opaque type ?=> =>> => ? <: >: + - _',
+      literal: alwaysKeywords.literal
     },
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
       titleFor('type'),
-      TPARAMS,
       PROBABLY_TYPE
     ]
   }
@@ -290,12 +272,6 @@ function highlightDotty(hljs) {
       hljs.C_BLOCK_COMMENT_MODE,
       titleFor('given'),
       PARAMS,
-      {
-        className: 'type',
-        begin: /as /, end: /((?!=>)[=\s{:])/,
-        excludeBegin: true, excludeEnd: true,
-        endsWithParent: true
-      },
       PROBABLY_TYPE
     ]
   }
@@ -401,7 +377,7 @@ function highlightDotty(hljs) {
       },
       {
         className: 'title',
-        begin: camelId
+        begin: camelCaseId
       },
       NUMBER,
       STRING,
@@ -409,7 +385,7 @@ function highlightDotty(hljs) {
     ]
   }
 
-  // inline someVar[andMaybeWithParams] match
+  // inline someVar[andMaybeTypeParams] match
   const INLINE_MATCH = {
     begin: /inline [^\n:]+ match/,
     keywords: 'inline match'
