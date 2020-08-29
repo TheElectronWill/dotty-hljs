@@ -75,7 +75,7 @@ function highlightDotty(hljs) {
     excludeEnd: true,
     keywords: {
       $pattern: alwaysKeywords.$pattern,
-      keyword: 'inline using ?=> =>> => _ ? <: >:',
+      keyword: 'inline using private protected val var ?=> =>> => _ ? <: >:',
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
