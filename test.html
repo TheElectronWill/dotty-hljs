@@ -12,6 +12,7 @@
       font-family: Fira Code, monospace;
       font-size: 12px;
       font-weight: 500;
+      font-variant-ligatures: none;
     }
   </style>
 </head>
@@ -83,7 +84,7 @@
       end `+=`
 
       private var _f: A => Boolean = ()=>false
-      override def func_=(f: A=>Boolean) = _f = f
+      override def func_=(f: A => Boolean) = _f = f
 
     type Concat[Xs <: Tuple, +Ys <: Tuple] <: Tuple = Xs match {
       case Unit => Ys
@@ -179,6 +180,38 @@
     case // A,B,C
     enum // Z extends T with U derives V
     given x // as T
+
+    def f(x: Int): ExecutionContext ?=> Int = ???
+    def f(using x: Int): ExecutionContext =>> Int = ???
+    def f(inline x: Int): ExecutionContext => Int = ???
+
+    def table(init: Table ?=> Unit) = ???
+    def table(init: Table =>> Unit) = ???
+    def table(init: Table => Unit) = ???
+
+    g(ExecutionContext ?=> f(3))  // is expanded to g((using ev: ExecutionContext) => f(3)(using ev))
+    g((using ctx: ExecutionContext) => f(22)(using ctx)) // is left as it is
+
+    @java.lang.Deprecated("A")
+    class A(val x: Int) // The type for which we want an `Ordering`
+
+    // Convert `A` to a type for which an `Ordering` is available:
+    implicit val AToInt: Conversion[A, Int] = _.x
+
+    implicitly[Ordering[Int]] // ...
+    implicitly[Ordering[A]] // ...
+                            // ...
+  </code></pre>
+  <pre><code class="language-dotty">
+    given ec as ExecutionContext = ...
+
+    def f(x: Int): ExecutionContext ?=> Int = ...
+
+    // could be written as follows with the type alias from above
+    // def f(x: Int): Executable[Int] = ...
+
+    f(2)(using ec)   // explicit argument
+    f(2)             // argument is inferred
   </code></pre>
   <pre><code class="language-java">
     // This is Java, for comparison

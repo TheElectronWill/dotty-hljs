@@ -25,7 +25,7 @@ function highlightDotty(hljs) {
       'if implicit import lazy match new object package private protected override return '+
       'sealed then throw trait true try type val var while with yield => =>> ?=> <: >: _ <-',
     literal: 'true false null this super',
-    built_in: '??? asInstanceOf isInstanceOf assert assertFail implicitly locally valueOf summon .nn'
+    built_in: '??? asInstanceOf isInstanceOf assert assertFail implicitly locally summon .nn'
   }
 
   // End of class, enum, etc. header
@@ -44,12 +44,10 @@ function highlightDotty(hljs) {
     begin: pascalId,
   }
 
-  const COLON_TYPE = {
-    className: 'type',
-    begin: /: */, end: /(= |\s|\()/,
-    excludeBegin: true,
-    returnEnd: true,
-    endsWithParent: true
+  const NUMBER = {
+    className: 'number',
+    begin: number,
+    relevance: 0
   }
 
   const TPARAMS = {
@@ -67,10 +65,12 @@ function highlightDotty(hljs) {
     relevance: 3
   }
 
-  const NUMBER = {
-    className: 'number',
-    begin: number,
-    relevance: 0
+  const COLON_TYPE = {
+    begin: /: */, end: /( = |[\s(),/])/,
+    excludeBegin: true,
+    returnEnd: true,
+    endsWithParent: true,
+    contains: [TYPE_ID, TPARAMS]
   }
 
   // Class or method parameters declaration
@@ -80,13 +80,15 @@ function highlightDotty(hljs) {
     excludeBegin: true,
     excludeEnd: true,
     keywords: {
-      keyword: 'var val implicit inline using',
+      $pattern: alwaysKeywords.$pattern,
+      keyword: 'var val implicit inline using ?=> => =>>',
       literal: alwaysKeywords.literal,
+      built_in: alwaysKeywords.built_in
     },
     contains: [
       {
         className: 'type',
-        begin: /(: *|using)/, end: /(?!=>)[,=\s]/,
+        begin: /(: *|using|=>> *|=> *)/, end: /[,=\s]/,
         excludeBegin: true, excludeEnd: true,
         endsWithParent: true
       },
@@ -138,7 +140,7 @@ function highlightDotty(hljs) {
     excludeBegin: true, excludeEnd: true,
     keywords: {
       $pattern: alwaysKeywords.$pattern,
-      keyword: 'using',
+      keyword: 'using => ?=> =>>',
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     },
@@ -152,7 +154,7 @@ function highlightDotty(hljs) {
   // @annot(...)
   const ANNOTATION = {
     className: 'meta',
-    begin: `@${id.source}`,
+    begin: `@${id.source}(\.${id.source})*`,
     contains: [
       APPLY
     ]
@@ -201,10 +203,14 @@ function highlightDotty(hljs) {
   // Methods
   const METHOD = {
     className: 'function',
-    begin: /(transparent\s+)?(inline\s+)?def/, end: /=|\n/,
+    begin: /(transparent\s+)?(inline\s+)?def/, end: / =|\n/,
     excludeEnd: true,
     relevance: 5,
-    keywords: 'def inline transparent',
+    keywords: {
+      $pattern: alwaysKeywords.$pattern,
+      keyword: 'def inline transparent ?=> => =>>',
+      built_in: alwaysKeywords.built_in
+    },
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
