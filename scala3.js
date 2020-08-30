@@ -375,10 +375,6 @@ function highlightDotty(hljs) {
           keyword: '@ _'
         }
       },
-      {
-        className: 'title',
-        begin: camelCaseId
-      },
       NUMBER,
       STRING,
       PROBABLY_TYPE
