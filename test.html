@@ -4,14 +4,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test HLJS</title>
   <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/lightfair.min.css"> -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/atom-one-light.min.css">
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/atom-one-light.min.css"> -->
+  <link rel="stylesheet" href="./nord-light.css">
   <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/highlight.min.js"></script>
   <script src="./scala3.js"></script>
   <style>
     pre code {
       font-family: "Fira Code", monospace;
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 14px;
       font-variant-ligatures: none;
     }
   </style>
@@ -33,6 +33,7 @@
      */
     open class Test[+X, -Y <: Self[XX, YY, ?]] private(x: Int, y: Int)(z: 0, l: "a" = "a") extends Coords(x,y) with T[X:::Y](z) derives Eql {
       inline def toto[T](xs: Buffer[Seq[T]] = null)(using Context[?]): R[?] =
+        var neg = -3000
         var as = 123_456L
         val end = s"interpolation of some $things: ${toto(0)}"
         val float = .56e-17d
@@ -42,6 +43,8 @@
         xs ++= Nil
         assert((open+1).isInstanceOf[Boolean])
         assertFail(open.asInstanceOf[java.lang.Boolean].nn.toString)
+        val isA = (xs == A)
+        val isntB = (xs != B)
         ???
 
       transparent inline def x() = ???
@@ -58,6 +61,8 @@
 
     @volatile final val zero = 0
     lazy val x: Option[AnyRef] = Some("test")
+
+    override protected[mypackage] def f = super.g(Nil)
 
     x match
       case None => throw new Exception("!")
@@ -269,6 +274,32 @@
     def f(union: a | b | c, intersection: a & b & c)
 
     type function = x => (B | C <: D)
+
+    // --- Macros, splices, quotations ---
+
+    ${'{e}} = e
+    '{${e}} = e
+    ${'[T]} = T
+    '[${T}] = T
+
+    def to[T: Type, R: Type](f: Expr[T] => Expr[R])(using QuoteContext): Expr[T => R] =
+      '{ (x: T) => ${ f('x) } }
+
+    def from[T: Type, R: Type](f: Expr[T => R])(using QuoteContext): Expr[T] => Expr[R] =
+      (x: Expr[T]) => '{ $f($x) }
+
+    import scala.quoted._
+
+    def compile(e: Exp, env: Map[String, Expr[Int]])(using QuoteContext): Expr[Int] = e match {
+      case Num(n) =>
+        Expr(n)
+      case Plus(e1, e2) =>
+        '{ ${ compile(e1, env) } + ${ compile(e2, env) } }
+      case Var(x) =>
+        env(x)
+      case Let(x, e, body) =>
+        '{ val y = ${ compile(e, env) }; ${ compile(body, env + (x -> 'y)) } }
+    }
   </code></pre>
   <pre><code class="language-java">
     // This is Java, for comparison
