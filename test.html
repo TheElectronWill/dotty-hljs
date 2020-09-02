@@ -32,7 +32,7 @@
      * @param y some parameter y
      */
     open class Test[+X, -Y <: Self[XX, YY, ?]] private(x: Int, y: Int)(z: 0, l: "a" = "a") extends Coords(x,y) with T[X:::Y](z) derives Eql {
-      inline def toto[T](xs: Buffer[Seq[T]] = null)(using Context[?]): R[?] =
+      inline def toto[T](inline xs: Buffer[Seq[T]] = null)(using Context[?]): R[?] =
         var neg = -3000
         var as = 123_456L
         val end = s"interpolation of some $things: ${toto(0)}"
@@ -48,6 +48,12 @@
         ???
 
       transparent inline def x() = ???
+      inline override transparent protected def x() = ???
+      sealed trait ST
+      final class A extends ST
+      open abstract implicit private class B
+      opaque private type T = TheType
+
       protected type Z <: String >: String
     }
     enum Letter {
