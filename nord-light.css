@@ -43,3 +43,6 @@ pre, .hljs {
 .hljs-built_in, .hljs-number, .hljs-literal {
   color: #9D5490;
 }
+.hljs-link {
+  text-decoration: underline;
+}
