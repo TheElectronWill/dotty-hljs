@@ -1,7 +1,6 @@
 function highlightDotty(hljs) {
 
   // identifiers
-  const camelCaseId = /[a-z][$\w]*/
   const capitalizedId = /\b[A-Z][$\w]*\b/
   const alphaId = /[a-zA-Z$_][$\w]*/
   const op1 = /[^\s\w\d,;"'()[\]{}=:]/
