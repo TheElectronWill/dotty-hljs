@@ -32,6 +32,7 @@ pre, .hljs {
 }
 .hljs-type {
   color: #1E7C7A;
+  font-weight: 500;
 }
 .hljs-keyword {
   color: #2E6BB8;

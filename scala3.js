@@ -5,7 +5,7 @@ function highlightDotty(hljs) {
   const capitalizedId = /\b[A-Z][$\w]*\b/
   const alphaId = /[a-zA-Z$_][$\w]*/
   const op = /[^\s\w\d,"'()[\]{}]+/
-  const id = new RegExp(`(${alphaId.source}((?<=_)${op.source})?|${op.source}|\`.*?\`)`)
+  const id = new RegExp(`(${alphaId.source}(_${op.source})?|${op.source}|\`.+?\`)`)
 
   // numbers
   const hexDigit = '[a-fA-F0-9]'
@@ -19,26 +19,18 @@ function highlightDotty(hljs) {
   // Regular Keywords
   // The "soft" keywords (e.g. 'using') are added later where necessary
   const alwaysKeywords = {
-    $pattern: /(\w+|\?=>|\?{1,3}|=>>|=>|<:|>:|_|<-|\.nn)/,
+    $pattern: /(\w+|\?=>|\?{1,3}|=>>|=>|<:|>:|_|#|<-|\.nn)/,
     keyword:
       'abstract case catch class def do else enum export extends final finally for given '+
       'if implicit import lazy match new object package private protected override return '+
-      'sealed then throw trait true try type val var while with yield =>> => ?=> <: >: _ ? <-',
+      'sealed then throw trait true try type val var while with yield =>> => ?=> <: >: _ ? <- #',
     literal: 'true false null this super',
-    built_in: '??? asInstanceOf isInstanceOf assert implicitly locally summon .nn'
+    built_in: '??? asInstanceOf isInstanceOf assert implicitly locally summon valueOf .nn'
   }
   const modifiers = 'abstract|final|implicit|override|private|protected|sealed'
 
   // End of class, enum, etc. header
   const templateDeclEnd = /(\/[/*]|{|: *\n|\n(?! *(extends|with|derives)))/
-
-  // name <title>
-  function titleFor(name) {
-    return {
-      className: 'title',
-      begin: `(?<=${name} )${id.source}`
-    }
-  }
 
   // all the keywords + soft keywords, separated by spaces
   function withSoftKeywords(kwd) {
@@ -48,6 +40,29 @@ function highlightDotty(hljs) {
       literal: alwaysKeywords.literal,
       built_in: alwaysKeywords.built_in
     }
+  }
+
+  const TITLE = {
+    className: 'title',
+    begin: id,
+    returnEnd: true
+  }
+
+  const TYPED = {
+    begin: /: (?=[a-zA-Z()?])/,
+    end: /\/\/|\/\*|\n/,
+    endsWithParent: true,
+    returnEnd: true,
+    contains: [
+      {
+        className: 'keyword',
+        begin: /\?\=>|[=:][><]|\?/,
+      },
+      {
+        className: 'type',
+        begin: alphaId
+      }
+    ]
   }
 
   const PROBABLY_TYPE = {
@@ -206,8 +221,15 @@ function highlightDotty(hljs) {
         begin: /- (?=\S)/, end: /\s/,
       },
       {
-        className: 'link',
-        begin: /(?<=\[.*?\])\(/, end: /\)/,
+        begin: /\[.*?\]\(/, end: /\)/,
+        contains: [
+          {
+            // mark as "link" only the URL
+            className: 'link',
+            begin: /.*?/,
+            endsWithParent: true
+          }
+        ]
       }
     ]
   })
@@ -222,22 +244,24 @@ function highlightDotty(hljs) {
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      titleFor('def'),
       TPARAMS,
       CTX_PARAMS,
       PARAMS,
-      PROBABLY_TYPE
+      TYPED,
+      PROBABLY_TYPE,
+      TITLE
     ]
   }
 
   // Variables & Constants
   const VAL = {
-    beginKeywords: 'val var', end: /[=:;\n]/,
+    beginKeywords: 'val var', end: /( +=|[=:;\n/])/,
     excludeEnd: true,
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      titleFor('(val|var)')
+      TYPED,
+      TITLE
     ]
   }
 
@@ -250,22 +274,25 @@ function highlightDotty(hljs) {
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      titleFor('type'),
       PROBABLY_TYPE
     ]
   }
 
   // Given instances
   const GIVEN = {
-    begin: /given/, end: /[=;\n]/,
+    begin: /given/, end: / =|[=;\n]/,
     excludeEnd: true,
     keywords: 'given using with',
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      titleFor('given'),
       PARAMS,
-      PROBABLY_TYPE
+      {
+        begin: 'as',
+        keywords: 'as'
+      },
+      PROBABLY_TYPE,
+      TITLE
     ]
   }
 
@@ -321,7 +348,6 @@ function highlightDotty(hljs) {
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      titleFor('(class|trait|object|enum)'),
       TPARAMS,
       CTX_PARAMS,
       PARAMS,
@@ -340,22 +366,18 @@ function highlightDotty(hljs) {
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      {
-        // case A, B, C
-        className: 'title',
-        begin: `(?<=(case|,) *)${id.source}`
-      },
       PARAMS,
       EXTENDS_PARENT,
       WITH_MIXIN,
       DERIVES_TYPECLASS,
+      TITLE,
       PROBABLY_TYPE
     ]
   }
 
   // Case in pattern matching
   const MATCH_CASE = {
-    begin: /case/, end: /=>/,
+    begin: /case/, end: /=>|\n/,
     keywords: 'case',
     excludeEnd: true,
     contains: [

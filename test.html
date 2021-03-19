@@ -43,6 +43,7 @@
         xs += Nil
         xs ++= Nil
         assert((open+1).isInstanceOf[Boolean])
+        // assertFail is no longer a keyword
         assertFail(open.asInstanceOf[java.lang.Boolean].nn.toString)
         val isA = (xs == A)
         val isntB = (xs != B)
@@ -307,6 +308,51 @@
       case Let(x, e, body) =>
         '{ val y = ${ compile(e, env) }; ${ compile(body, env + (x -> 'y)) } }
     }
+  </code></pre>
+  <pre><code class="language-dotty">
+    abstract;
+    case;
+    catch;
+    class;
+    def;
+    do;
+    else;
+    enum;
+    export;
+    extends;
+    false;
+    final;
+    finally;
+    for;
+    given;
+    if;
+    implicit;
+    import;
+    lazy;
+    match;
+    new;
+    null;
+    object;
+    override;
+    package;
+    private;
+    protected;
+    return;
+    sealed;
+    super;
+    then;
+    throw;
+    trait;
+    true;
+    try;
+    type;
+    val;
+    var;
+    while;
+    with;
+    yield;
+    :         =         <-        =>        <:        :>        #
+    @         =>>       ?=>
   </code></pre>
   <pre><code class="language-java">
     // This is Java, for comparison
