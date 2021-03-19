@@ -93,6 +93,8 @@
       @infix @alpha("prepended")
       def ::(x: A) = ???
 
+      infix def ==(o: A): Bool = ???
+
       @alpha("append")
       def +=(x: A) =
         ???
@@ -142,6 +144,9 @@
                                              (using x: String): ReturnType[Int => ?]
     object PO:
       def apply() = "PO"
+
+    package p:
+      def a = 1
 
     def absoluteValue(n: Int): Int =
       if (n < 0) -n else n
@@ -271,6 +276,8 @@
       case _: EmptyTuple => Nil
       case _: (t *: ts) => summonInline[Eq[t]] :: summonAll[ts]
     }
+
+    infix def infixed: () => Unit
 
     val both: Object & Product
     val both: a & b & c

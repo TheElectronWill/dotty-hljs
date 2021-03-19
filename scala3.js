@@ -4,8 +4,9 @@ function highlightDotty(hljs) {
   const camelCaseId = /[a-z][$\w]*/
   const capitalizedId = /\b[A-Z][$\w]*\b/
   const alphaId = /[a-zA-Z$_][$\w]*/
-  const op = /[^\s\w\d,"'()[\]{}]+/
-  const id = new RegExp(`(${alphaId.source}(_${op.source})?|${op.source}|\`.+?\`)`)
+  const op1 = /[^\s\w\d,;"'()[\]{}=:]/
+  const op2 = /[^\s\w\d,;"'()[\]{}]/
+  const id = new RegExp(`(${alphaId.source}(_${op2.source}+)?|${op2.source}{2,}|${op1.source}+|\`.+?\`)`)
 
   // numbers
   const hexDigit = '[a-fA-F0-9]'
@@ -30,7 +31,7 @@ function highlightDotty(hljs) {
   const modifiers = 'abstract|final|implicit|override|private|protected|sealed'
 
   // End of class, enum, etc. header
-  const templateDeclEnd = /(\/[/*]|{|: *\n|\n(?! *(extends|with|derives)))/
+  const templateDeclEnd = /(\/[/*]|{|:(?= *\n)|\n(?! *(extends|with|derives)))/
 
   // all the keywords + soft keywords, separated by spaces
   function withSoftKeywords(kwd) {
@@ -45,7 +46,17 @@ function highlightDotty(hljs) {
   const TITLE = {
     className: 'title',
     begin: id,
-    returnEnd: true
+    returnEnd: true,
+    keywords: alwaysKeywords.keyword,
+    literal: alwaysKeywords.literal,
+    built_in: alwaysKeywords.built_in
+  }
+
+  const TITLE2 = {
+    className: 'title',
+    begin: id,
+    excludeEnd: true,
+    endsWithParent: true
   }
 
   const TYPED = {
@@ -56,7 +67,7 @@ function highlightDotty(hljs) {
     contains: [
       {
         className: 'keyword',
-        begin: /\?\=>|[=:][><]|\?/,
+        begin: /\?\=>|=>>|[=:][><]|\?/,
       },
       {
         className: 'type',
@@ -237,17 +248,17 @@ function highlightDotty(hljs) {
   // Methods
   const METHOD = {
     className: 'function',
-    begin: `((${modifiers}|transparent|inline) +)*def`, end: / =|\n/,
+    begin: `((${modifiers}|transparent|inline|infix) +)*def`, end: / =\s|\n/,
     excludeEnd: true,
     relevance: 5,
-    keywords: withSoftKeywords('inline transparent'),
+    keywords: withSoftKeywords('inline infix transparent'),
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
       TPARAMS,
       CTX_PARAMS,
       PARAMS,
-      TYPED,
+      TYPED, // prevents the ":" (declared type) to become a title
       PROBABLY_TYPE,
       TITLE
     ]
@@ -255,26 +266,26 @@ function highlightDotty(hljs) {
 
   // Variables & Constants
   const VAL = {
-    beginKeywords: 'val var', end: /( +=|[=:;\n/])/,
+    beginKeywords: 'val var', end: /[=:;\n/]/,
     excludeEnd: true,
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      TYPED,
-      TITLE
+      TITLE2
     ]
   }
 
   // Type declarations
   const TYPEDEF = {
     className: 'typedef',
-    begin: `((${modifiers}|opaque) +)*type`, end: /[=;\n]/,
+    begin: `((${modifiers}|opaque) +)*type`, end: /[=;\n]| ?[<>]:/,
     excludeEnd: true,
     keywords: withSoftKeywords('opaque'),
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
-      PROBABLY_TYPE
+      PROBABLY_TYPE,
+      TITLE2,
     ]
   }
 
@@ -345,6 +356,7 @@ function highlightDotty(hljs) {
     className: 'class',
     begin: `((${modifiers}|open|case|transparent) +)*(class|trait|enum|object|package object)`, end: templateDeclEnd,
     keywords: withSoftKeywords('open transparent'),
+    excludeEnd: true,
     contains: [
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
@@ -354,7 +366,18 @@ function highlightDotty(hljs) {
       EXTENDS_PARENT,
       WITH_MIXIN,
       DERIVES_TYPECLASS,
+      TITLE,
       PROBABLY_TYPE
+    ]
+  }
+
+  const PACKAGE = {
+    className: 'package',
+    begin: /package (?=\w+ *[:{\n])/, end: /[:{\n]/,
+    excludeEnd: true,
+    keywords: alwaysKeywords,
+    contains: [
+      TITLE
     ]
   }
 
@@ -415,6 +438,7 @@ function highlightDotty(hljs) {
       METHOD,
       VAL,
       TYPEDEF,
+      PACKAGE,
       CLASS,
       GIVEN,
       EXTENSION,
