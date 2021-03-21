@@ -5,7 +5,8 @@ function highlightDotty(hljs) {
   const alphaId = /[a-zA-Z$_][$\w]*/
   const op1 = /[^\s\w\d,;"'()[\]{}=:]/
   const op2 = /[^\s\w\d,;"'()[\]{}]/
-  const id = new RegExp(`(${alphaId.source}(_${op2.source}+)?|${op2.source}{2,}|${op1.source}+|\`.+?\`)`)
+  const compound = `[a-zA-Z$][a-zA-Z0-9$]*_${op2.source}+` // e.g. value_=
+  const id = new RegExp(`(${compound}|${alphaId.source}|${op2.source}{2,}|${op1.source}+|\`.+?\`)`)
 
   // numbers
   const hexDigit = '[a-fA-F0-9]'
@@ -42,6 +43,7 @@ function highlightDotty(hljs) {
     }
   }
 
+  // title inside of a complex token made of several parts (e.g. class)
   const TITLE = {
     className: 'title',
     begin: id,
@@ -51,6 +53,7 @@ function highlightDotty(hljs) {
     built_in: alwaysKeywords.built_in
   }
 
+  // title that goes to the end of a simple token (e.g. val)
   const TITLE2 = {
     className: 'title',
     begin: id,
@@ -65,6 +68,8 @@ function highlightDotty(hljs) {
     returnEnd: true,
     contains: [
       {
+        // works better than the usual way of defining keyword,
+        // in this specific situation
         className: 'keyword',
         begin: /\?\=>|=>>|[=:][><]|\?/,
       },
@@ -87,6 +92,7 @@ function highlightDotty(hljs) {
     relevance: 0
   }
 
+  // type parameters within [square brackets]
   const TPARAMS = {
     begin: /\[/, end: /\]/,
     keywords: {
@@ -146,6 +152,7 @@ function highlightDotty(hljs) {
     ]
   }
 
+  // "string" or """string""", with or without interpolation
   const STRING = {
     className: 'string',
     variants: [
@@ -284,7 +291,7 @@ function highlightDotty(hljs) {
       hljs.C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
       PROBABLY_TYPE,
-      TITLE2,
+      TITLE,
     ]
   }
 
@@ -370,6 +377,7 @@ function highlightDotty(hljs) {
     ]
   }
 
+  // package declaration with a content
   const PACKAGE = {
     className: 'package',
     begin: /package (?=\w+ *[:{\n])/, end: /[:{\n]/,
